@@ -6,14 +6,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: List files
-        run: ls -la
-      - name: Unzip
+      - name: Unzip project
         run: |
           ZIP=$(ls *.zip | head -1)
           echo "Found $ZIP"
-          unzip -o "$ZIP" -d project
-          ls -la project
+          unzip -o "$ZIP" -d .
+          rm -f "$ZIP"
+          ls -la
+      - name: Find gradlew
+        run: |
+          find . -name "gradlew" -type f
+          GRADLEW_PATH=$(find . -name "gradlew" -type f | head -1)
+          echo "GRADLEW=$GRADLEW_PATH" >> $GITHUB_ENV
+          echo "Found: $GRADLEW_PATH"
+          ls -la $(dirname $GRADLEW_PATH)
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -21,10 +27,9 @@ jobs:
           java-version: '17'
       - name: Build APK
         run: |
-          cd project
-          if [ -d "Mbogo_Investment_Android_Starter" ]; then cd Mbogo_Investment_Android_Starter; fi
-          ls -la
-          chmod +x gradlew
+          echo "Using $GRADLEW_PATH"
+          chmod +x $GRADLEW_PATH
+          cd $(dirname $GRADLEW_PATH)
           ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
