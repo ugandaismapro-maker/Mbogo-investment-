@@ -6,23 +6,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
+      - name: List files
+        run: ls -la
+      - name: Unzip
         run: |
-          unzip -o Mbogo_Investment_Android_Starter.zip -d . || unzip -o Mbogo_Investment_An*.zip -d .
-          ls -la
-      - name: Set up JDK 17
+          ZIP=$(ls *.zip | head -1)
+          echo "Found $ZIP"
+          unzip -o "$ZIP" -d project
+          ls -la project
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
       - name: Build APK
         run: |
-          find . -name gradlew -exec chmod +x {} \;
-          GRADLE=$(find . -name gradlew | head -1)
-          DIR=$(dirname $GRADLE)
-          cd $DIR && ./gradlew assembleDebug
+          cd project
+          if [ -d "Mbogo_Investment_Android_Starter" ]; then cd Mbogo_Investment_Android_Starter; fi
+          ls -la
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Mbogo-APK
-          path: '**/app/build/outputs/apk/debug/*.apk'
+          path: '**/*.apk'
